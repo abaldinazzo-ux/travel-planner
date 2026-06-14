@@ -12,11 +12,13 @@ import { ItemCard } from '@/components/items/ItemCard'
 import { FlightCard } from '@/components/items/FlightCard'
 import { AddItemModal } from '@/components/items/AddItemModal'
 import { AddFlightModal } from '@/components/items/AddFlightModal'
+import { AddDestinationModal } from './AddDestinationModal'
 import { StatusBar } from './StatusBar'
 import { BudgetTracker } from './BudgetTracker'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { ShareButtonClient } from '@/app/destinations/[id]/ShareButtonClient'
 import { useToast } from '@/components/ui/Toast'
+import Link from 'next/link'
 
 interface TripDashboardProps {
   dest: Destination
@@ -26,14 +28,8 @@ interface TripDashboardProps {
 }
 
 function QuickNote({
-  destinationId,
-  category,
-  onSaved,
-}: {
-  destinationId: string
-  category: Category
-  onSaved: (item: DestinationItem) => void
-}) {
+  destinationId, category, onSaved,
+}: { destinationId: string; category: Category; onSaved: (item: DestinationItem) => void }) {
   const [text, setText] = useState('')
   const { toast } = useToast()
 
@@ -49,12 +45,9 @@ function QuickNote({
         name: trimmed.slice(0, 50),
         notes: trimmed.length > 50 ? trimmed : null,
         status: 'idea' as ItemStatus,
-        price: null,
-        rating: null,
-        url: null,
+        price: null, rating: null, url: null,
       })
-      .select()
-      .single()
+      .select().single()
     if (data) { onSaved(data); setText('') }
     else if (error) toast(error.message, 'error')
   }
@@ -71,6 +64,15 @@ function QuickNote({
   )
 }
 
+function ConfirmBanner({ onCancel }: { onCancel: () => void }) {
+  return (
+    <div className="px-4 py-2 bg-red-950/40 rounded-xl text-red-300 text-xs flex items-center justify-between">
+      <span>Clicca Elimina di nuovo per confermare</span>
+      <button onClick={onCancel} className="text-red-300/50 hover:text-red-300 transition-colors">Annulla</button>
+    </div>
+  )
+}
+
 export function TripDashboard({ dest, initialItems, prevDest, nextDest }: TripDashboardProps) {
   const [items, setItems] = useState<DestinationItem[]>(initialItems)
   const [openSections, setOpenSections] = useState<Set<Category>>(new Set(['voli']))
@@ -78,6 +80,7 @@ export function TripDashboard({ dest, initialItems, prevDest, nextDest }: TripDa
   const [addCategory, setAddCategory] = useState<Category | null>(null)
   const [flightModalOpen, setFlightModalOpen] = useState(false)
   const [editingFlight, setEditingFlight] = useState<DestinationItem | undefined>()
+  const [showEditDest, setShowEditDest] = useState(false)
   const deleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const router = useRouter()
   const { toast } = useToast()
@@ -117,8 +120,8 @@ export function TripDashboard({ dest, initialItems, prevDest, nextDest }: TripDa
     setItems(prev => prev.filter(i => i.id !== id))
     const supabase = createClient()
     const { error } = await supabase.from('destination_items').delete().eq('id', id)
-    if (error) { toast(error.message, 'error'); }
-    else { toast('Eliminato', 'info') }
+    if (error) toast(error.message, 'error')
+    else toast('Eliminato', 'info')
   }
 
   const refetchCategory = async (cat: Category) => {
@@ -127,39 +130,38 @@ export function TripDashboard({ dest, initialItems, prevDest, nextDest }: TripDa
       .from('destination_items').select('*')
       .eq('destination_id', dest.id).eq('category', cat)
       .order('created_at', { ascending: false })
-    if (data) {
-      setItems(prev => [...prev.filter(i => i.category !== cat), ...data])
-    }
+    if (data) setItems(prev => [...prev.filter(i => i.category !== cat), ...data])
   }
 
-  const handleQuickNote = (item: DestinationItem) => {
-    setItems(prev => [item, ...prev])
-  }
+  const handleQuickNote = (item: DestinationItem) => setItems(prev => [item, ...prev])
 
-  const getCatItems = (cat: Category) =>
-    items.filter(i => i.category === cat)
+  const getCatItems = (cat: Category) => items.filter(i => i.category === cat)
 
   return (
     <div className="min-h-screen bg-[#0D1B2A]">
       {/* Sticky header */}
       <div className="sticky top-0 z-30 bg-[#0D1B2A]/90 backdrop-blur-md border-b border-white/5">
         <div className="flex items-center gap-3 px-4 py-3">
-          {/* Prev */}
           <button
             onClick={() => prevDest && router.push(`/destinations/${prevDest.id}`)}
             disabled={!prevDest}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-[#6B8FA8] hover:text-sand hover:bg-white/5 transition-all disabled:opacity-20 shrink-0"
             title={prevDest ? `← ${prevDest.emoji} ${prevDest.name}` : undefined}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-[#6B8FA8] hover:text-sand hover:bg-white/5 transition-all disabled:opacity-20 shrink-0"
           >
             ‹
           </button>
 
-          {/* Center */}
           <div className="flex-1 min-w-0">
-            <Breadcrumb items={[
-              { label: 'WanderPlan', href: '/' },
-              { label: `${dest.emoji} ${dest.name}` },
-            ]} />
+            <div className="flex items-center gap-2">
+              <Breadcrumb items={[{ label: 'WanderPlan', href: '/' }, { label: `${dest.emoji} ${dest.name}` }]} />
+              <button
+                onClick={() => setShowEditDest(true)}
+                className="text-[#6B8FA8]/40 hover:text-[#6B8FA8] text-xs transition-colors shrink-0"
+                title="Modifica destinazione"
+              >
+                ✎
+              </button>
+            </div>
             {(period || dest.budget) && (
               <div className="flex items-center gap-3 mt-0.5">
                 {period && <span className="text-[#6B8FA8] text-xs">{period}</span>}
@@ -172,20 +174,24 @@ export function TripDashboard({ dest, initialItems, prevDest, nextDest }: TripDa
             )}
           </div>
 
-          {/* Next */}
           <button
             onClick={() => nextDest && router.push(`/destinations/${nextDest.id}`)}
             disabled={!nextDest}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-[#6B8FA8] hover:text-sand hover:bg-white/5 transition-all disabled:opacity-20 shrink-0"
             title={nextDest ? `${nextDest.emoji} ${nextDest.name} →` : undefined}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-[#6B8FA8] hover:text-sand hover:bg-white/5 transition-all disabled:opacity-20 shrink-0"
           >
             ›
           </button>
 
+          <Link
+            href={`/destinations/${dest.id}/timeline`}
+            className="text-[#6B8FA8] hover:text-sand text-xs transition-colors shrink-0 hidden sm:block"
+          >
+            Timeline
+          </Link>
           <ShareButtonClient destinationId={dest.id} />
         </div>
 
-        {/* Status bar */}
         <StatusBar items={items} budget={dest.budget} />
       </div>
 
@@ -200,7 +206,6 @@ export function TripDashboard({ dest, initialItems, prevDest, nextDest }: TripDa
 
           return (
             <div key={cat} className="bg-[#111e2d] rounded-2xl overflow-hidden border border-white/5">
-              {/* Section header */}
               <button
                 onClick={() => toggleSection(cat)}
                 className="w-full flex items-center gap-3 px-5 py-4 hover:bg-white/3 transition-colors text-left"
@@ -214,29 +219,17 @@ export function TripDashboard({ dest, initialItems, prevDest, nextDest }: TripDa
                       {catSpend > 0 && ` · €${catSpend.toFixed(0)}`}
                     </span>
                   )}
-                  {!isOpen && cat !== 'voli' && (
-                    <button
-                      onClick={e => { e.stopPropagation(); toggleSection(cat); setAddCategory(cat) }}
-                      className="text-[#6B8FA8] hover:text-sand text-xs px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
-                    >
-                      +
-                    </button>
-                  )}
                   <span className="text-[#6B8FA8] text-xs">{isOpen ? '▲' : '▼'}</span>
                 </div>
               </button>
 
-              {/* Section body */}
               {isOpen && (
                 <div className="px-4 pb-4 flex flex-col gap-3">
-                  {/* Items */}
                   {cat === 'voli' ? (
                     <>
                       {flightItem ? (
                         <>
-                          {pendingDelete === flightItem.id && (
-                            <ConfirmBanner onCancel={() => setPendingDelete(null)} />
-                          )}
+                          {pendingDelete === flightItem.id && <ConfirmBanner onCancel={() => setPendingDelete(null)} />}
                           <FlightCard
                             item={flightItem}
                             onDelete={handleDeleteRequest}
@@ -267,29 +260,16 @@ export function TripDashboard({ dest, initialItems, prevDest, nextDest }: TripDa
                         <div className="flex flex-col gap-2">
                           {catItems.map(item => (
                             <div key={item.id}>
-                              {pendingDelete === item.id && (
-                                <ConfirmBanner onCancel={() => setPendingDelete(null)} />
-                              )}
-                              <ItemCard
-                                item={item}
-                                onDelete={handleDeleteRequest}
-                                onStatusChange={handleStatusChange}
-                              />
+                              {pendingDelete === item.id && <ConfirmBanner onCancel={() => setPendingDelete(null)} />}
+                              <ItemCard item={item} onDelete={handleDeleteRequest} onStatusChange={handleStatusChange} />
                             </div>
                           ))}
                         </div>
                       )}
-                      <button
-                        onClick={() => setAddCategory(cat)}
-                        className="text-[#6B8FA8] hover:text-sand text-xs self-start transition-colors"
-                      >
+                      <button onClick={() => setAddCategory(cat)} className="text-[#6B8FA8] hover:text-sand text-xs self-start transition-colors">
                         + Aggiungi {meta.label.toLowerCase()}
                       </button>
-                      <QuickNote
-                        destinationId={dest.id}
-                        category={cat}
-                        onSaved={handleQuickNote}
-                      />
+                      <QuickNote destinationId={dest.id} category={cat} onSaved={handleQuickNote} />
                     </>
                   )}
                 </div>
@@ -298,7 +278,6 @@ export function TripDashboard({ dest, initialItems, prevDest, nextDest }: TripDa
           )
         })}
 
-        {/* Budget tracker */}
         <BudgetTracker items={items} budget={dest.budget} />
       </div>
 
@@ -319,15 +298,13 @@ export function TripDashboard({ dest, initialItems, prevDest, nextDest }: TripDa
           category={addCategory}
         />
       )}
-    </div>
-  )
-}
-
-function ConfirmBanner({ onCancel }: { onCancel: () => void }) {
-  return (
-    <div className="px-4 py-2 bg-red-950/40 rounded-xl text-red-300 text-xs flex items-center justify-between">
-      <span>Clicca Elimina di nuovo per confermare</span>
-      <button onClick={onCancel} className="text-red-300/50 hover:text-red-300 transition-colors">Annulla</button>
+      <AddDestinationModal
+        open={showEditDest}
+        onClose={() => setShowEditDest(false)}
+        onCreated={() => { setShowEditDest(false); router.refresh() }}
+        onDeleted={() => router.push('/')}
+        existingDestination={dest}
+      />
     </div>
   )
 }

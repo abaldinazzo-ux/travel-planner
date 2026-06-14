@@ -17,6 +17,7 @@ export function BubbleCanvas({ initialDestinations, userId }: BubbleCanvasProps)
   const [destinations, setDestinations] = useState(initialDestinations)
   const [showAdd, setShowAdd] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
+  const [editingDest, setEditingDest] = useState<Destination | null>(null)
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const canvasRef = useRef<HTMLDivElement>(null)
   const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
@@ -86,7 +87,6 @@ export function BubbleCanvas({ initialDestinations, userId }: BubbleCanvasProps)
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-[#0D1B2A] select-none">
-      {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0D1B2A]/70 backdrop-blur-md">
         <div className="flex items-center gap-2.5">
           <span className="text-xl">🧭</span>
@@ -94,25 +94,16 @@ export function BubbleCanvas({ initialDestinations, userId }: BubbleCanvasProps)
         </div>
         <div className="flex items-center gap-4">
           {destinations.length > 0 && (
-            <a href="/compare" className="text-[#6B8FA8] hover:text-sand text-sm transition-colors">
-              Confronta
-            </a>
+            <a href="/compare" className="text-[#6B8FA8] hover:text-sand text-sm transition-colors">Confronta</a>
           )}
           {userId ? (
-            <button onClick={handleLogout}
-              className="text-[#6B8FA8]/60 hover:text-[#6B8FA8] text-sm transition-colors">
-              Esci
-            </button>
+            <button onClick={handleLogout} className="text-[#6B8FA8]/60 hover:text-[#6B8FA8] text-sm transition-colors">Esci</button>
           ) : (
-            <button onClick={() => setShowAuth(true)}
-              className="text-coral hover:text-coral/80 text-sm font-medium transition-colors">
-              Accedi
-            </button>
+            <button onClick={() => setShowAuth(true)} className="text-coral hover:text-coral/80 text-sm font-medium transition-colors">Accedi</button>
           )}
         </div>
       </header>
 
-      {/* Canvas */}
       <div ref={canvasRef} className="absolute inset-0">
         {destinations.length === 0 && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center pointer-events-none">
@@ -128,12 +119,12 @@ export function BubbleCanvas({ initialDestinations, userId }: BubbleCanvasProps)
             itemCount={dest.item_count}
             onClick={() => handleBubbleClick(dest)}
             onDragStart={e => handleDragStart(e, dest)}
+            onEdit={() => setEditingDest(dest)}
             isDragging={draggingId === dest.id}
           />
         ))}
       </div>
 
-      {/* FAB */}
       <button
         onClick={() => userId ? setShowAdd(true) : setShowAuth(true)}
         className="absolute bottom-8 right-8 z-30 w-12 h-12 rounded-full bg-coral text-white text-xl flex items-center justify-center shadow-lg shadow-coral/25 hover:bg-coral/85 active:scale-95 transition-all duration-150"
@@ -143,6 +134,13 @@ export function BubbleCanvas({ initialDestinations, userId }: BubbleCanvasProps)
       </button>
 
       <AddDestinationModal open={showAdd} onClose={() => setShowAdd(false)} onCreated={refresh} />
+      <AddDestinationModal
+        open={!!editingDest}
+        onClose={() => setEditingDest(null)}
+        onCreated={refresh}
+        onDeleted={() => { setEditingDest(null); refresh() }}
+        existingDestination={editingDest ?? undefined}
+      />
       <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
     </div>
   )

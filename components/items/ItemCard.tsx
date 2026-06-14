@@ -21,7 +21,25 @@ function Stars({ rating }: { rating: number | null }) {
   )
 }
 
+function parseHotelData(notes: string | null): { checkin?: string; checkout?: string; address?: string; room_type?: string } | null {
+  if (!notes) return null
+  try {
+    const p = JSON.parse(notes)
+    if (p.checkin || p.checkout) return p
+  } catch { /* not JSON */ }
+  return null
+}
+
+function shortDate(d: string): string {
+  return new Date(d + 'T12:00:00').toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })
+}
+
 export function ItemCard({ item, onDelete, onStatusChange, readonly }: ItemCardProps) {
+  const hotel = item.category === 'hotel' ? parseHotelData(item.notes) : null
+  const nights = hotel?.checkin && hotel?.checkout
+    ? Math.round((new Date(hotel.checkout + 'T12:00:00').getTime() - new Date(hotel.checkin + 'T12:00:00').getTime()) / 86400000)
+    : null
+
   return (
     <div className="bg-[#1A2E42] rounded-2xl px-5 py-4 flex gap-4 group hover:bg-[#1e3550] transition-colors">
       <div className="flex-1 min-w-0">
@@ -37,17 +55,28 @@ export function ItemCard({ item, onDelete, onStatusChange, readonly }: ItemCardP
             </button>
           )}
         </div>
+
+        {/* Hotel dates */}
+        {hotel && (hotel.checkin || hotel.checkout) && (
+          <p className="text-[#6B8FA8] text-xs mt-1 font-mono">
+            {hotel.checkin && shortDate(hotel.checkin)}
+            {hotel.checkin && hotel.checkout && ' → '}
+            {hotel.checkout && shortDate(hotel.checkout)}
+            {nights && nights > 0 && ` · ${nights} nott${nights === 1 ? 'e' : 'i'}`}
+          </p>
+        )}
+        {hotel?.address && (
+          <p className="text-[#6B8FA8]/60 text-xs mt-0.5 truncate">{hotel.address}</p>
+        )}
+
         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
           {!readonly && (
-            <StatusBadge
-              itemId={item.id}
-              status={item.status ?? 'idea'}
-              onStatusChange={onStatusChange}
-            />
+            <StatusBadge itemId={item.id} status={item.status ?? 'idea'} onStatusChange={onStatusChange} />
           )}
-          {item.rating !== null && <Stars rating={item.rating} />}
+          {!hotel && item.rating !== null && <Stars rating={item.rating} />}
         </div>
-        {item.notes && (
+
+        {!hotel && item.notes && (
           <p className="text-[#6B8FA8] text-sm mt-1.5 line-clamp-2 leading-relaxed">{item.notes}</p>
         )}
         {item.url && (
