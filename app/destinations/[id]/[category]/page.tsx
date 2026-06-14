@@ -1,5 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { ItemsList } from '@/components/items/ItemsList'
 import { Category, CATEGORY_META } from '@/lib/types'
@@ -9,13 +10,20 @@ const VALID_CATEGORIES: Category[] = ['voli', 'hotel', 'ristoranti', 'itinerari'
 export default async function CategoryPage(props: {
   params: Promise<{ id: string; category: string }>
 }) {
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  )
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/')
+
   const { id, category } = await props.params
 
   if (!VALID_CATEGORIES.includes(category as Category)) notFound()
   const cat = category as Category
   const meta = CATEGORY_META[cat]
-
-  const supabase = await createClient()
 
   const { data: dest } = await supabase
     .from('destinations')

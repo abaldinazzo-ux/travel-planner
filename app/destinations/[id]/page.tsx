@@ -1,5 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { CategoryGrid } from '@/components/destinations/CategoryGrid'
 import { ShareButtonClient } from './ShareButtonClient'
@@ -22,8 +23,16 @@ function formatDate(d: string | null): string {
 }
 
 export default async function DestinationPage(props: { params: Promise<{ id: string }> }) {
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  )
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/')
+
   const { id } = await props.params
-  const supabase = await createClient()
 
   const { data: dest } = await supabase
     .from('destinations')
@@ -45,7 +54,6 @@ export default async function DestinationPage(props: { params: Promise<{ id: str
 
   return (
     <div className="min-h-screen bg-navy">
-      {/* Header */}
       <div
         className="px-6 pt-8 pb-6"
         style={{ background: `linear-gradient(135deg, ${dest.color}22, transparent)` }}
@@ -90,12 +98,10 @@ export default async function DestinationPage(props: { params: Promise<{ id: str
         </div>
       </div>
 
-      {/* Share */}
       <div className="px-6 pb-4">
         <ShareButtonClient destinationId={id} />
       </div>
 
-      {/* Category Grid */}
       <div className="px-6 pb-10">
         <h2 className="text-sand/50 text-xs uppercase tracking-wide mb-4">Categorie</h2>
         <CategoryGrid destinationId={id} items={allItems} />
