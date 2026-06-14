@@ -35,9 +35,9 @@ export default async function CategoryPage(props: {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="min-h-screen bg-[#0D1B2A]">
+    <div className="min-h-screen">
       {/* Top nav */}
-      <div className="sticky top-0 z-20 border-b border-white/5 bg-[#0D1B2A]/80 backdrop-blur-md px-6 py-3">
+      <div className="sticky top-0 z-20 border-b border-white/5 glass-nav px-6 py-3">
         <Link href={`/destinations/${id}`}
           className="inline-flex items-center gap-1.5 text-[#6B8FA8] hover:text-sand text-sm transition-colors">
           <span>←</span>

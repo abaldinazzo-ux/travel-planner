@@ -13,13 +13,11 @@ interface DayColumnProps {
   onStatusChange: (id: string, status: ItemStatus) => void
 }
 
-function isoDate(d: Date): string {
-  return d.toISOString().split('T')[0]
-}
+function isoDate(d: Date): string { return d.toISOString().split('T')[0] }
 
 function isToday(d: Date): boolean {
-  const now = new Date()
-  return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+  const n = new Date()
+  return d.getDate() === n.getDate() && d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear()
 }
 
 export function DayColumn({ day, events, lockedEvents, destinationId, onItemCreated, onStatusChange }: DayColumnProps) {
@@ -28,34 +26,41 @@ export function DayColumn({ day, events, lockedEvents, destinationId, onItemCrea
   const totalPOI = events.length + lockedEvents.length
   const isFull = totalPOI > 4
   const dailySpend = [...events, ...lockedEvents].reduce((s, e) => s + (e.item.price ?? 0), 0)
-
   const dayLabel = day.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })
 
   return (
-    <div className="flex flex-col w-[200px] shrink-0 border-r border-white/5">
-      {/* Column header */}
-      <div className={`px-3 py-2.5 border-b border-white/5 sticky top-0 z-10 ${
-        today ? 'bg-coral/15' : isFull ? 'bg-coral/8' : 'bg-[#0D1B2A]/95'
-      } backdrop-blur-sm`}>
+    <div className="flex flex-col shrink-0" style={{ width: 200, borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+      {/* Header */}
+      <div
+        className="px-3 py-2.5 sticky top-0 z-10"
+        style={{
+          background: today
+            ? 'rgba(255,107,74,0.14)'
+            : isFull
+              ? 'rgba(255,107,74,0.07)'
+              : 'rgba(10,15,26,0.85)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}
+      >
         <div className="flex items-center justify-between">
-          <span className={`text-xs font-semibold capitalize ${today ? 'text-coral' : 'text-sand'}`}>
+          <span className="text-xs font-semibold capitalize" style={{ color: today ? '#FF6B4A' : 'rgba(255,255,255,0.82)', letterSpacing: '-0.1px' }}>
             {dayLabel}
           </span>
-          {today && <span className="text-coral text-[10px] font-bold">OGGI</span>}
+          {today && <span style={{ color: '#FF6B4A', fontSize: 9, fontWeight: 700, letterSpacing: '0.5px' }}>OGGI</span>}
         </div>
         {totalPOI > 0 && (
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[#6B8FA8]/60 text-[10px]">{totalPOI} posti</span>
-            {dailySpend > 0 && (
-              <span className="text-aqua text-[10px] font-mono">€{dailySpend.toFixed(0)}</span>
-            )}
-            {isFull && <span className="text-coral text-[10px]">piena</span>}
+            <span style={{ color: 'rgba(255,255,255,0.30)', fontSize: 10 }}>{totalPOI} posti</span>
+            {dailySpend > 0 && <span style={{ color: '#4ECBA0', fontSize: 10, fontFamily: 'monospace' }}>€{dailySpend.toFixed(0)}</span>}
+            {isFull && <span style={{ color: '#FF6B4A', fontSize: 9 }}>piena</span>}
           </div>
         )}
       </div>
 
-      {/* Time slots */}
-      <div className="flex-1 flex flex-col divide-y divide-white/5 overflow-y-auto">
+      {/* Slots */}
+      <div className="flex-1 flex flex-col overflow-y-auto px-2 py-1.5" style={{ background: 'rgba(255,255,255,0.015)' }}>
         {TIME_SLOTS.map(slot => {
           const slotEvents = events.filter(e => e.slot === slot)
           const slotLocked = lockedEvents.filter(e => e.slot === slot)

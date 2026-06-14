@@ -3,21 +3,96 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-navy: #0D1B2A;
-  --color-navy-light: #1A2E42;
-  --color-sand: #E8DCC8;
-  --color-coral: #E07A5F;
-  --color-aqua: #81B29A;
-  --font-sans: Inter, system-ui, sans-serif;
+  --color-navy: #0a0f1a;
+  --color-navy-light: #111827;
+  --color-sand: #ffffff;
+  --color-coral: #FF6B4A;
+  --color-aqua: #4ECBA0;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
 }
 
-:root {
-  --background: #0D1B2A;
-  --foreground: #E8DCC8;
+/* ─── Glass token classes ──────────────────────────────── */
+
+.glass {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 16px;
 }
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.11);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+}
+
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.glass-nav {
+  background: rgba(10, 15, 26, 0.72);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Fallback for browsers without backdrop-filter */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass        { background: rgba(18, 28, 48, 0.95); }
+  .glass-strong { background: rgba(14, 22, 40, 0.98); }
+  .glass-subtle { background: rgba(18, 28, 48, 0.88); }
+  .glass-nav    { background: rgba(10, 15, 26, 0.98); }
+}
+
+/* ─── Animations ───────────────────────────────────────── */
+
+@keyframes glass-appear {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes modal-enter {
+  from { opacity: 0; transform: scale(0.95) translateY(4px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+.glass-appear { animation: glass-appear 0.28s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.modal-enter  { animation: modal-enter  0.22s cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+/* ─── Body / background ────────────────────────────────── */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Inter, system-ui, sans-serif;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(26, 58, 92, 0.7)  0%, transparent 55%),
+    radial-gradient(ellipse at 80% 20%, rgba(45, 27, 78, 0.6)  0%, transparent 50%),
+    radial-gradient(ellipse at 60% 80%, rgba(13, 51, 32, 0.55) 0%, transparent 50%),
+    #0a0f1a;
+  background-attachment: fixed;
+  color: rgba(255, 255, 255, 0.88);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* ─── Custom scrollbar ─────────────────────────────────── */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+
+/* ─── Selection ────────────────────────────────────────── */
+
+::selection { background: rgba(255, 107, 74, 0.32); }

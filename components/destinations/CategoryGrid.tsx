@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { Category, CATEGORY_META, DestinationItem } from '@/lib/types'
+import { CategoryIcon } from '@/components/ui/CategoryIcon'
 
 interface CategoryGridProps {
   destinationId: string
@@ -12,7 +13,6 @@ const CATEGORIES: Category[] = ['voli', 'hotel', 'ristoranti', 'itinerari', 'att
 
 export function CategoryGrid({ destinationId, items }: CategoryGridProps) {
   const router = useRouter()
-
   const countByCategory = (cat: Category) => items.filter(i => i.category === cat).length
 
   return (
@@ -24,18 +24,20 @@ export function CategoryGrid({ destinationId, items }: CategoryGridProps) {
           <button
             key={cat}
             onClick={() => router.push(`/destinations/${destinationId}/${cat}`)}
-            className="flex flex-col items-center justify-center gap-3 aspect-square rounded-2xl bg-[#1A2E42]
-              hover:bg-[#1e3550] transition-all duration-200 cursor-pointer group"
+            className="flex flex-col items-center justify-center gap-3 aspect-square glass-subtle transition-all duration-200 cursor-pointer group hover:scale-[1.02]"
+            style={{ '--hover-border': 'rgba(255,255,255,0.18)' } as React.CSSProperties}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.border = '1px solid rgba(255,255,255,0.2)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.border = '1px solid rgba(255,255,255,0.08)' }}
           >
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-200"
-              style={{ background: `${meta.color}20` }}
+              className="w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200"
+              style={{ background: `rgba(${hexToRgb(meta.color)}, 0.18)` }}
             >
-              {meta.emoji}
+              <CategoryIcon category={cat} size={22} style={{ color: meta.color }} />
             </div>
             <div className="flex flex-col items-center gap-0.5">
-              <span className="text-sand text-sm font-medium">{meta.label}</span>
-              <span className="text-[#6B8FA8] text-xs">
+              <span className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.88)' }}>{meta.label}</span>
+              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.38)' }}>
                 {count === 0 ? 'Vuoto' : `${count} element${count === 1 ? 'o' : 'i'}`}
               </span>
             </div>
@@ -44,4 +46,11 @@ export function CategoryGrid({ destinationId, items }: CategoryGridProps) {
       })}
     </div>
   )
+}
+
+function hexToRgb(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `${r}, ${g}, ${b}`
 }

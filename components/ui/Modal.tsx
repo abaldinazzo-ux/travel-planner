@@ -32,19 +32,27 @@ export function Modal({ open, onClose, title, children, maxWidth = 'max-w-md' }:
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={e => { if (e.target === overlayRef.current) onClose() }}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className={`relative w-full ${maxWidth} bg-[#132435] rounded-2xl shadow-2xl shadow-black/40 ring-1 ring-white/8`}>
+      {/* Overlay */}
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }} />
+
+      {/* Modal */}
+      <div className={`relative w-full ${maxWidth} glass-strong modal-enter shadow-2xl`} style={{ boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }}>
         {title && (
-          <div className="flex items-center justify-between px-6 pt-5 pb-4">
-            <h2 className="text-sand font-semibold">{title}</h2>
-            <button onClick={onClose}
-              className="text-[#6B8FA8] hover:text-sand transition-colors w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/5"
-              aria-label="Chiudi">
+          <div className="flex items-center justify-between px-7 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.09)' }}>
+            <h2 className="font-semibold" style={{ color: 'rgba(255,255,255,0.95)', fontSize: 16, letterSpacing: '-0.3px' }}>
+              {title}
+            </h2>
+            <button
+              onClick={onClose}
+              className="w-7 h-7 flex items-center justify-center rounded-lg transition-all duration-150 hover:bg-white/10"
+              style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}
+              aria-label="Chiudi"
+            >
               ✕
             </button>
           </div>
         )}
-        <div className={title ? 'px-6 pb-6' : 'p-6'}>{children}</div>
+        <div className={title ? 'px-7 pb-7' : 'p-7'}>{children}</div>
       </div>
     </div>
   )

@@ -4,10 +4,22 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ItemStatus, STATUS_CYCLE } from '@/lib/types'
 
-const STYLES: Record<ItemStatus, string> = {
-  idea:   'bg-white/8 text-[#6B8FA8] hover:bg-white/14',
-  found:  'bg-yellow-500/15 text-yellow-400 hover:bg-yellow-500/25',
-  booked: 'bg-green-500/15 text-green-400 hover:bg-green-500/25',
+const STYLES: Record<ItemStatus, React.CSSProperties> = {
+  idea: {
+    background: 'rgba(255,255,255,0.10)',
+    border: '1px solid rgba(255,255,255,0.18)',
+    color: 'rgba(255,255,255,0.60)',
+  },
+  found: {
+    background: 'rgba(255,184,64,0.13)',
+    border: '1px solid rgba(255,184,64,0.28)',
+    color: '#FFB340',
+  },
+  booked: {
+    background: 'rgba(78,203,160,0.13)',
+    border: '1px solid rgba(78,203,160,0.30)',
+    color: '#4ECBA0',
+  },
 }
 
 const LABELS: Record<ItemStatus, string> = {
@@ -36,16 +48,14 @@ export function StatusBadge({ itemId, status: initial, onStatusChange }: StatusB
     const supabase = createClient()
     const { error } = await supabase.from('destination_items').update({ status: next }).eq('id', itemId)
     setSaving(false)
-    if (error) {
-      setStatus(status)
-      onStatusChange?.(itemId, status)
-    }
+    if (error) { setStatus(status); onStatusChange?.(itemId, status) }
   }
 
   return (
     <button
       onClick={handleClick}
-      className={`px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all select-none ${STYLES[status]}`}
+      className="px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all duration-150 select-none"
+      style={STYLES[status]}
     >
       {LABELS[status]}
     </button>

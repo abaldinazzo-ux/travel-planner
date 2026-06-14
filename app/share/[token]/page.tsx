@@ -42,9 +42,9 @@ export default async function SharePage(props: { params: Promise<{ token: string
   const itemsByCategory = (cat: Category) => allItems.filter(i => i.category === cat)
 
   return (
-    <div className="min-h-screen bg-navy">
+    <div className="min-h-screen">
       {/* Banner */}
-      <div className="bg-navy-light border-b border-sand/10 px-6 py-3 flex items-center justify-between">
+      <div className="glass-nav px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sand/50 text-sm">
           <span className="text-lg">🧭</span>
           <span>WanderPlan</span>

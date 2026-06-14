@@ -30,9 +30,9 @@ export default async function TimelinePage(props: { params: Promise<{ id: string
   const period = formatPeriod(dest.date_from, dest.period_note)
 
   return (
-    <div className="min-h-screen bg-[#0D1B2A]">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 z-20 border-b border-white/5 bg-[#0D1B2A]/90 backdrop-blur-md">
+      <div className="sticky top-0 z-20 glass-nav">
         <div className="flex items-center gap-3 px-4 py-3">
           <div className="flex-1 min-w-0">
             <Breadcrumb items={[
