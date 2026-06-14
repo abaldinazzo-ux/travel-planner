@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { Category, DestinationItem, CATEGORY_META } from '@/lib/types'
 import { ItemCard } from './ItemCard'
 import { AddItemModal } from './AddItemModal'
+import { FlightCard } from './FlightCard'
+import { AddFlightModal } from './AddFlightModal'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 
@@ -18,11 +20,14 @@ interface ItemsListProps {
 export function ItemsList({ initialItems, destinationId, category, readonly }: ItemsListProps) {
   const [items, setItems] = useState(initialItems)
   const [showAdd, setShowAdd] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [editingItem, setEditingItem] = useState<DestinationItem | undefined>(undefined)
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null)
   const { toast } = useToast()
   const meta = CATEGORY_META[category]
+  const isVoli = category === 'voli'
+  const flightItem = isVoli ? items[0] : undefined
 
-  const totalPrice = items.reduce((sum, i) => sum + (i.price ?? 0), 0)
+  const totalPrice = items.reduce((s, i) => s + (i.price ?? 0), 0)
 
   const refresh = async () => {
     const supabase = createClient()
@@ -36,9 +41,9 @@ export function ItemsList({ initialItems, destinationId, category, readonly }: I
   }
 
   const handleDelete = async (id: string) => {
-    if (confirmDelete !== id) {
-      setConfirmDelete(id)
-      setTimeout(() => setConfirmDelete(null), 3000)
+    if (pendingDelete !== id) {
+      setPendingDelete(id)
+      setTimeout(() => setPendingDelete(null), 3000)
       return
     }
     const supabase = createClient()
@@ -46,51 +51,71 @@ export function ItemsList({ initialItems, destinationId, category, readonly }: I
     if (error) {
       toast(error.message, 'error')
     } else {
-      toast('Elemento eliminato', 'info')
+      toast('Eliminato', 'info')
       setItems(prev => prev.filter(i => i.id !== id))
-      setConfirmDelete(null)
+      setPendingDelete(null)
     }
   }
 
+  const openAdd = () => { setEditingItem(undefined); setShowAdd(true) }
+  const openEdit = (item: DestinationItem) => { setEditingItem(item); setShowAdd(true) }
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{meta.emoji}</span>
-          <div>
-            <h2 className="text-sand font-semibold">{meta.label}</h2>
-            {totalPrice > 0 && (
-              <p className="text-aqua text-sm">Totale: €{totalPrice.toFixed(2)}</p>
-            )}
-          </div>
+        <div>
+          <h2 className="text-sand font-semibold flex items-center gap-2">
+            <span>{meta.emoji}</span> {meta.label}
+          </h2>
+          {totalPrice > 0 && (
+            <p className="text-aqua text-sm mt-0.5">Totale: €{totalPrice.toFixed(2)}</p>
+          )}
         </div>
-        {!readonly && (
-          <Button onClick={() => setShowAdd(true)} size="sm">
-            + Aggiungi
-          </Button>
+        {!readonly && (!isVoli || !flightItem) && (
+          <Button onClick={openAdd} size="sm">+ {isVoli ? 'Aggiungi voli' : 'Aggiungi'}</Button>
+        )}
+        {!readonly && isVoli && flightItem && (
+          <Button variant="secondary" size="sm" onClick={() => openEdit(flightItem)}>Modifica voli</Button>
         )}
       </div>
 
+      {/* Content */}
       {items.length === 0 ? (
-        <div className="flex flex-col items-center py-12 gap-3 text-center">
-          <span className="text-4xl opacity-30">{meta.emoji}</span>
-          <p className="text-sand/40">Nessun elemento in questa categoria</p>
+        <div className="flex flex-col items-center py-16 gap-3 text-center">
+          <span className="text-5xl opacity-20">{meta.emoji}</span>
+          <p className="text-sand/30 text-sm">Nessun elemento</p>
           {!readonly && (
-            <Button size="sm" variant="secondary" onClick={() => setShowAdd(true)}>
-              Aggiungi il primo
+            <Button size="sm" variant="secondary" onClick={openAdd}>
+              {isVoli ? 'Configura voli' : 'Aggiungi il primo'}
             </Button>
+          )}
+        </div>
+      ) : isVoli ? (
+        <div>
+          {pendingDelete === flightItem?.id && (
+            <div className="mb-3 px-4 py-2 bg-red-950/40 rounded-xl text-red-300 text-xs flex items-center justify-between">
+              <span>Clicca Elimina di nuovo per confermare</span>
+              <button onClick={() => setPendingDelete(null)} className="text-red-300/50 hover:text-red-300">Annulla</button>
+            </div>
+          )}
+          {flightItem && (
+            <FlightCard
+              item={flightItem}
+              onDelete={handleDelete}
+              onEdit={() => openEdit(flightItem)}
+              readonly={readonly}
+            />
           )}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
           {items.map(item => (
             <div key={item.id}>
-              {confirmDelete === item.id && (
-                <div className="mb-1 px-3 py-1.5 bg-red-900/30 border border-red-500/30 rounded-lg text-red-300 text-xs flex items-center justify-between">
-                  <span>Clicca di nuovo ✕ per confermare l&apos;eliminazione</span>
-                  <button onClick={() => setConfirmDelete(null)} className="text-red-300/60 hover:text-red-300">
-                    Annulla
-                  </button>
+              {pendingDelete === item.id && (
+                <div className="mb-2 px-4 py-2 bg-red-950/40 rounded-xl text-red-300 text-xs flex items-center justify-between">
+                  <span>Clicca ✕ di nuovo per confermare</span>
+                  <button onClick={() => setPendingDelete(null)} className="text-red-300/50 hover:text-red-300">Annulla</button>
                 </div>
               )}
               <ItemCard item={item} onDelete={handleDelete} readonly={readonly} />
@@ -99,7 +124,17 @@ export function ItemsList({ initialItems, destinationId, category, readonly }: I
         </div>
       )}
 
-      {!readonly && (
+      {/* Modals */}
+      {!readonly && isVoli && (
+        <AddFlightModal
+          open={showAdd}
+          onClose={() => setShowAdd(false)}
+          onSaved={refresh}
+          destinationId={destinationId}
+          existingItem={editingItem}
+        />
+      )}
+      {!readonly && !isVoli && (
         <AddItemModal
           open={showAdd}
           onClose={() => setShowAdd(false)}

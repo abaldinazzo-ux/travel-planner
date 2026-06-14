@@ -15,10 +15,13 @@ interface AddItemModalProps {
   category: Category
 }
 
+const INPUT = 'bg-[#0D1B2A] rounded-xl px-4 py-3 text-sand placeholder-sand/20 focus:outline-none ring-1 ring-white/8 focus:ring-coral/50 transition-all w-full text-sm'
+const LABEL = 'text-[#6B8FA8] text-[10px] font-semibold uppercase tracking-widest mb-1.5 block'
+
 export function AddItemModal({ open, onClose, onCreated, destinationId, category }: AddItemModalProps) {
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
-  const [rating, setRating] = useState<number>(0)
+  const [rating, setRating] = useState(0)
   const [notes, setNotes] = useState('')
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
@@ -46,49 +49,31 @@ export function AddItemModal({ open, onClose, onCreated, destinationId, category
       toast(error.message, 'error')
     } else {
       toast(`${meta.emoji} Aggiunto!`)
-      reset()
-      onCreated()
-      onClose()
+      reset(); onCreated(); onClose()
     }
   }
 
   return (
     <Modal open={open} onClose={onClose} title={`Aggiungi ${meta.label}`}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <label className="text-sand/60 text-xs uppercase tracking-wide">Nome *</label>
-          <input
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder={`Nome ${meta.label.toLowerCase()}`}
-            required
-            className="px-3 py-2 bg-navy border border-sand/20 rounded-lg text-sand placeholder-sand/30 focus:outline-none focus:border-coral"
-          />
+        <div>
+          <label className={LABEL}>Nome *</label>
+          <input value={name} onChange={e => setName(e.target.value)}
+            placeholder={`Nome ${meta.label.toLowerCase()}`} required className={INPUT} />
         </div>
 
-        <div className="flex gap-3">
-          <div className="flex flex-col gap-1 flex-1">
-            <label className="text-sand/60 text-xs uppercase tracking-wide">Prezzo (€)</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={price}
-              onChange={e => setPrice(e.target.value)}
-              placeholder="0.00"
-              className="px-3 py-2 bg-navy border border-sand/20 rounded-lg text-sand placeholder-sand/30 focus:outline-none focus:border-coral"
-            />
+        <div className="flex gap-3 items-end">
+          <div className="flex-1">
+            <label className={LABEL}>Prezzo (€)</label>
+            <input type="number" min="0" step="0.01" value={price}
+              onChange={e => setPrice(e.target.value)} placeholder="0.00" className={INPUT} />
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-sand/60 text-xs uppercase tracking-wide">Valutazione</label>
-            <div className="flex gap-1 py-2">
+          <div>
+            <label className={LABEL}>Valutazione</label>
+            <div className="flex gap-1 pb-3">
               {[1, 2, 3, 4, 5].map(n => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setRating(rating === n ? 0 : n)}
-                  className={`text-xl transition-colors ${n <= rating ? 'text-yellow-400' : 'text-sand/20 hover:text-yellow-400/50'}`}
-                >
+                <button key={n} type="button" onClick={() => setRating(rating === n ? 0 : n)}
+                  className={`text-xl transition-colors ${n <= rating ? 'text-yellow-400' : 'text-white/15 hover:text-yellow-400/50'}`}>
                   ★
                 </button>
               ))}
@@ -96,29 +81,20 @@ export function AddItemModal({ open, onClose, onCreated, destinationId, category
           </div>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="text-sand/60 text-xs uppercase tracking-wide">Note</label>
-          <textarea
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            placeholder="Note aggiuntive…"
-            rows={2}
-            className="px-3 py-2 bg-navy border border-sand/20 rounded-lg text-sand placeholder-sand/30 focus:outline-none focus:border-coral resize-none"
-          />
+        <div>
+          <label className={LABEL}>Note</label>
+          <textarea value={notes} onChange={e => setNotes(e.target.value)}
+            placeholder="Note aggiuntive…" rows={2}
+            className={INPUT + ' resize-none'} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="text-sand/60 text-xs uppercase tracking-wide">URL</label>
-          <input
-            type="url"
-            value={url}
-            onChange={e => setUrl(e.target.value)}
-            placeholder="https://…"
-            className="px-3 py-2 bg-navy border border-sand/20 rounded-lg text-sand placeholder-sand/30 focus:outline-none focus:border-coral"
-          />
+        <div>
+          <label className={LABEL}>URL</label>
+          <input type="url" value={url} onChange={e => setUrl(e.target.value)}
+            placeholder="https://…" className={INPUT} />
         </div>
 
-        <div className="flex gap-3 pt-2">
+        <div className="flex gap-3 pt-1">
           <Button type="button" variant="ghost" className="flex-1" onClick={() => { reset(); onClose() }}>
             Annulla
           </Button>

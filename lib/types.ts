@@ -7,8 +7,9 @@ export interface Destination {
   country: string | null
   emoji: string
   color: string
-  date_from: string | null
-  date_to: string | null
+  date_from: string | null    // primo del mese: "2026-08-01"
+  date_to: string | null      // legacy, non più usato per il periodo
+  period_note: string | null  // es. "prima settimana", "evitare Ferragosto"
   budget: number | null
   pos_x: number
   pos_y: number
@@ -22,9 +23,24 @@ export interface DestinationItem {
   name: string
   price: number | null
   rating: number | null
-  notes: string | null
+  notes: string | null  // per i voli: JSON.stringify(FlightData)
   url: string | null
   created_at: string
+}
+
+export interface FlightLeg {
+  date: string
+  time: string
+  from: string
+  to: string
+  airline: string
+  price: string
+  url: string
+}
+
+export interface FlightData {
+  outbound: Partial<FlightLeg>
+  return: Partial<FlightLeg>
 }
 
 export interface TripShare {
@@ -53,3 +69,10 @@ export const CATEGORY_META: Record<Category, { label: string; emoji: string; col
 export const DESTINATION_COLORS = [
   '#3B6D8A', '#5C4B8A', '#8A4B5C', '#4B8A5C', '#8A7A3B', '#3B8A7A',
 ]
+
+export function formatPeriod(dateFrom: string | null, periodNote?: string | null): string {
+  if (!dateFrom) return ''
+  const d = new Date(dateFrom + 'T12:00:00')
+  const month = d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })
+  return periodNote ? `${month} · ${periodNote}` : month
+}

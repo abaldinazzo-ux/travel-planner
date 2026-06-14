@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Destination, DestinationItem } from '@/lib/types'
+import { Destination, DestinationItem, formatPeriod } from '@/lib/types'
 
 interface DestinationWithItems extends Destination {
   destination_items: DestinationItem[]
@@ -16,7 +16,7 @@ function calcScore(dest: Destination, items: DestinationItem[]): number {
   let score = 0
   if (dest.name) score += 1
   if (dest.country) score += 1
-  if (dest.date_from && dest.date_to) score += 2
+  if (dest.date_from) score += 2
   if (dest.budget) score += 1
   const categories = new Set(items.map(i => i.category))
   score += Math.min(5, categories.size)
@@ -24,8 +24,11 @@ function calcScore(dest: Destination, items: DestinationItem[]): number {
 }
 
 function dateOverlap(a: Destination, b: Destination): boolean {
-  if (!a.date_from || !a.date_to || !b.date_from || !b.date_to) return false
-  return new Date(a.date_from) <= new Date(b.date_to) && new Date(b.date_from) <= new Date(a.date_to)
+  if (!a.date_from || !b.date_from) return false
+  const aDate = new Date(a.date_from)
+  const bDate = new Date(b.date_from)
+  // Same month = overlap
+  return aDate.getFullYear() === bDate.getFullYear() && aDate.getMonth() === bDate.getMonth()
 }
 
 export function CompareTable({ destinations }: CompareTableProps) {
@@ -38,110 +41,93 @@ export function CompareTable({ destinations }: CompareTableProps) {
     catCount: (cat: string) => d.destination_items.filter(i => i.category === cat).length,
   }))
 
-  const best = scored.reduce((a, b) => a.score > b.score ? a : b, scored[0])
+  const best = scored.length > 0 ? scored.reduce((a, b) => a.score > b.score ? a : b) : null
 
   const filtered = filterOverlap
-    ? scored.filter((d, i) =>
-        scored.some((other, j) => i !== j && dateOverlap(d, other))
-      )
+    ? scored.filter((d, i) => scored.some((o, j) => i !== j && dateOverlap(d, o)))
     : scored
 
   if (destinations.length === 0) {
     return (
-      <div className="text-center py-20 text-sand/40">
-        <div className="text-5xl mb-4">🗺️</div>
-        <p>Nessuna destinazione da confrontare</p>
-        <Link href="/" className="text-coral text-sm mt-2 inline-block hover:underline">
-          Aggiungi destinazioni →
-        </Link>
+      <div className="text-center py-24 text-[#6B8FA8]">
+        <div className="text-5xl mb-4 opacity-20">🗺️</div>
+        <p className="text-sm">Nessuna destinazione da confrontare</p>
+        <Link href="/" className="text-coral text-sm mt-3 inline-block hover:underline">Aggiungi destinazioni →</Link>
       </div>
     )
   }
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Best pick banner */}
+      {/* Best pick */}
       {best && (
-        <div
-          className="rounded-2xl p-5 border flex items-center gap-4"
-          style={{ background: `${best.color}22`, borderColor: `${best.color}44` }}
-        >
-          <span className="text-4xl">{best.emoji}</span>
-          <div>
-            <p className="text-sand/50 text-xs uppercase tracking-wide mb-0.5">Destinazione consigliata</p>
-            <p className="text-sand font-semibold text-lg">{best.name}</p>
-            <p className="text-sand/50 text-sm">Score: {best.score}/10</p>
+        <div className="rounded-2xl p-5 flex items-center gap-4"
+          style={{ background: `${best.color}18`, border: `1px solid ${best.color}30` }}>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
+            style={{ background: `${best.color}25` }}>
+            {best.emoji}
           </div>
-          <div className="ml-auto">
-            <Link
-              href={`/destinations/${best.id}`}
-              className="text-coral text-sm hover:underline"
-            >
-              Vai →
-            </Link>
+          <div className="flex-1 min-w-0">
+            <p className="text-[#6B8FA8] text-[10px] font-semibold uppercase tracking-widest mb-0.5">Consigliata</p>
+            <p className="text-sand font-medium">{best.name}</p>
+            <p className="text-[#6B8FA8] text-xs mt-0.5">Score {best.score}/10</p>
           </div>
+          <Link href={`/destinations/${best.id}`} className="text-coral text-sm hover:underline shrink-0">
+            Apri →
+          </Link>
         </div>
       )}
 
       {/* Filter */}
-      <div className="flex items-center gap-2">
+      <div>
         <button
           onClick={() => setFilterOverlap(v => !v)}
-          className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${filterOverlap ? 'bg-coral text-white' : 'bg-navy-light text-sand/60 hover:text-sand border border-sand/10'}`}
-        >
-          📅 Sovrapposizione date
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            filterOverlap ? 'bg-coral/80 text-white' : 'bg-[#1A2E42] text-[#6B8FA8] hover:text-sand'
+          }`}>
+          Stesso periodo
         </button>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-sand/10">
+      <div className="overflow-x-auto rounded-2xl ring-1 ring-white/8">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-sand/10 bg-navy-light">
-              <th className="text-left px-4 py-3 text-sand/50 font-medium">Destinazione</th>
-              <th className="text-left px-4 py-3 text-sand/50 font-medium">Periodo</th>
-              <th className="text-right px-4 py-3 text-sand/50 font-medium">Budget</th>
-              <th className="text-right px-4 py-3 text-sand/50 font-medium">Stimato</th>
-              <th className="text-center px-4 py-3 text-sand/50 font-medium">✈️</th>
-              <th className="text-center px-4 py-3 text-sand/50 font-medium">🏨</th>
-              <th className="text-center px-4 py-3 text-sand/50 font-medium">🎯</th>
-              <th className="text-center px-4 py-3 text-sand/50 font-medium">Score</th>
+            <tr className="border-b border-white/5">
+              {['Destinazione', 'Periodo', 'Budget', 'Stimato', '✈️', '🏨', '🎯', 'Score'].map(h => (
+                <th key={h} className={`px-4 py-3 text-[#6B8FA8] text-[10px] font-semibold uppercase tracking-widest ${
+                  ['Budget', 'Stimato', '✈️', '🏨', '🎯', 'Score'].includes(h) ? 'text-right' : 'text-left'
+                }`}>{h}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {filtered.map((d, i) => (
-              <tr
-                key={d.id}
-                className={`border-b border-sand/5 hover:bg-sand/5 transition-colors ${i % 2 === 0 ? 'bg-navy' : 'bg-navy-light/30'}`}
-              >
-                <td className="px-4 py-3">
-                  <Link href={`/destinations/${d.id}`} className="flex items-center gap-2 hover:text-coral transition-colors">
+            {filtered.map(d => (
+              <tr key={d.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                <td className="px-4 py-3.5">
+                  <Link href={`/destinations/${d.id}`} className="flex items-center gap-2.5 hover:text-coral transition-colors">
                     <span>{d.emoji}</span>
                     <div>
                       <p className="text-sand font-medium">{d.name}</p>
-                      {d.country && <p className="text-sand/40 text-xs">{d.country}</p>}
+                      {d.country && <p className="text-[#6B8FA8] text-xs">{d.country}</p>}
                     </div>
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-sand/60 text-xs">
-                  {d.date_from
-                    ? `${new Date(d.date_from).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })} – ${d.date_to ? new Date(d.date_to).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }) : '?'}`
-                    : '—'}
+                <td className="px-4 py-3.5 text-[#6B8FA8] text-xs whitespace-nowrap">
+                  {formatPeriod(d.date_from, d.period_note) || '—'}
                 </td>
-                <td className="px-4 py-3 text-right text-sand/60">
+                <td className="px-4 py-3.5 text-right text-[#6B8FA8] font-mono text-xs">
                   {d.budget ? `€${Number(d.budget).toFixed(0)}` : '—'}
                 </td>
-                <td className="px-4 py-3 text-right text-aqua">
+                <td className="px-4 py-3.5 text-right text-aqua font-mono text-xs">
                   {d.totalSpend > 0 ? `€${d.totalSpend.toFixed(0)}` : '—'}
                 </td>
-                <td className="px-4 py-3 text-center text-sand/60">{d.catCount('voli') || '—'}</td>
-                <td className="px-4 py-3 text-center text-sand/60">{d.catCount('hotel') || '—'}</td>
-                <td className="px-4 py-3 text-center text-sand/60">{d.catCount('attivita') || '—'}</td>
-                <td className="px-4 py-3 text-center">
-                  <span
-                    className="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold text-white"
-                    style={{ background: d.color }}
-                  >
+                <td className="px-4 py-3.5 text-right text-[#6B8FA8]">{d.catCount('voli') || '—'}</td>
+                <td className="px-4 py-3.5 text-right text-[#6B8FA8]">{d.catCount('hotel') || '—'}</td>
+                <td className="px-4 py-3.5 text-right text-[#6B8FA8]">{d.catCount('attivita') || '—'}</td>
+                <td className="px-4 py-3.5 text-right">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl text-sm font-semibold text-white font-mono"
+                    style={{ background: d.color }}>
                     {d.score}
                   </span>
                 </td>
