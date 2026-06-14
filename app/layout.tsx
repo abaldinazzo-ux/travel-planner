@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { ToastProvider } from '@/components/ui/Toast'
+import { GlobalUI } from '@/components/ui/GlobalUI'
 
 export const metadata: Metadata = {
   title: 'WanderPlan',
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-navy text-sand min-h-screen antialiased">
         <ToastProvider>
           {children}
+          <GlobalUI />
         </ToastProvider>
       </body>
     </html>

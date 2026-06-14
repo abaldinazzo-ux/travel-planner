@@ -1,10 +1,12 @@
 'use client'
 
-import { DestinationItem } from '@/lib/types'
+import { DestinationItem, ItemStatus } from '@/lib/types'
+import { StatusBadge } from './StatusBadge'
 
 interface ItemCardProps {
   item: DestinationItem
   onDelete: (id: string) => void
+  onStatusChange?: (id: string, status: ItemStatus) => void
   readonly?: boolean
 }
 
@@ -13,13 +15,13 @@ function Stars({ rating }: { rating: number | null }) {
   return (
     <span className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map(n => (
-        <span key={n} className={n <= rating ? 'text-yellow-400' : 'text-white/10'} style={{ fontSize: 12 }}>★</span>
+        <span key={n} className={n <= rating ? 'text-yellow-400' : 'text-white/10'} style={{ fontSize: 11 }}>★</span>
       ))}
     </span>
   )
 }
 
-export function ItemCard({ item, onDelete, readonly }: ItemCardProps) {
+export function ItemCard({ item, onDelete, onStatusChange, readonly }: ItemCardProps) {
   return (
     <div className="bg-[#1A2E42] rounded-2xl px-5 py-4 flex gap-4 group hover:bg-[#1e3550] transition-colors">
       <div className="flex-1 min-w-0">
@@ -35,13 +37,22 @@ export function ItemCard({ item, onDelete, readonly }: ItemCardProps) {
             </button>
           )}
         </div>
-        {item.rating !== null && <div className="mt-1"><Stars rating={item.rating} /></div>}
+        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+          {!readonly && (
+            <StatusBadge
+              itemId={item.id}
+              status={item.status ?? 'idea'}
+              onStatusChange={onStatusChange}
+            />
+          )}
+          {item.rating !== null && <Stars rating={item.rating} />}
+        </div>
         {item.notes && (
           <p className="text-[#6B8FA8] text-sm mt-1.5 line-clamp-2 leading-relaxed">{item.notes}</p>
         )}
         {item.url && (
           <a href={item.url} target="_blank" rel="noopener noreferrer"
-             className="text-coral/70 hover:text-coral text-xs mt-1.5 inline-block truncate max-w-full transition-colors"
+             className="text-coral/60 hover:text-coral text-xs mt-1.5 inline-block truncate max-w-full transition-colors"
              onClick={e => e.stopPropagation()}>
             {item.url}
           </a>

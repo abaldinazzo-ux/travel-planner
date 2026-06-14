@@ -1,4 +1,5 @@
 export type Category = 'voli' | 'hotel' | 'ristoranti' | 'itinerari' | 'attivita' | 'note'
+export type ItemStatus = 'idea' | 'found' | 'booked'
 
 export interface Destination {
   id: string
@@ -7,9 +8,9 @@ export interface Destination {
   country: string | null
   emoji: string
   color: string
-  date_from: string | null    // primo del mese: "2026-08-01"
-  date_to: string | null      // legacy, non più usato per il periodo
-  period_note: string | null  // es. "prima settimana", "evitare Ferragosto"
+  date_from: string | null
+  date_to: string | null
+  period_note: string | null
   budget: number | null
   pos_x: number
   pos_y: number
@@ -23,8 +24,9 @@ export interface DestinationItem {
   name: string
   price: number | null
   rating: number | null
-  notes: string | null  // per i voli: JSON.stringify(FlightData)
+  notes: string | null
   url: string | null
+  status: ItemStatus
   created_at: string
 }
 
@@ -57,6 +59,12 @@ export interface DestinationWithItems extends Destination {
   destination_items: DestinationItem[]
 }
 
+export interface DestinationStub {
+  id: string
+  name: string
+  emoji: string
+}
+
 export const CATEGORY_META: Record<Category, { label: string; emoji: string; color: string }> = {
   voli:        { label: 'Voli',       emoji: '✈️',  color: '#3B82F6' },
   hotel:       { label: 'Alloggio',   emoji: '🏨',  color: '#8B5CF6' },
@@ -69,6 +77,12 @@ export const CATEGORY_META: Record<Category, { label: string; emoji: string; col
 export const DESTINATION_COLORS = [
   '#3B6D8A', '#5C4B8A', '#8A4B5C', '#4B8A5C', '#8A7A3B', '#3B8A7A',
 ]
+
+export const SECTION_ORDER: Category[] = ['voli', 'hotel', 'ristoranti', 'itinerari', 'attivita', 'note']
+
+export const STATUS_CYCLE: Record<ItemStatus, ItemStatus> = {
+  idea: 'found', found: 'booked', booked: 'idea',
+}
 
 export function formatPeriod(dateFrom: string | null, periodNote?: string | null): string {
   if (!dateFrom) return ''
