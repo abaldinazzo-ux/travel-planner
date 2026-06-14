@@ -16,9 +16,9 @@ import { AddDestinationModal } from './AddDestinationModal'
 import { StatusBar } from './StatusBar'
 import { BudgetTracker } from './BudgetTracker'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
+import { DestinationTabNav } from './DestinationTabNav'
 import { ShareButtonClient } from '@/app/destinations/[id]/ShareButtonClient'
 import { useToast } from '@/components/ui/Toast'
-import Link from 'next/link'
 
 interface TripDashboardProps {
   dest: Destination
@@ -183,15 +183,10 @@ export function TripDashboard({ dest, initialItems, prevDest, nextDest }: TripDa
             ›
           </button>
 
-          <Link
-            href={`/destinations/${dest.id}/timeline`}
-            className="text-[#6B8FA8] hover:text-sand text-xs transition-colors shrink-0 hidden sm:block"
-          >
-            Timeline
-          </Link>
           <ShareButtonClient destinationId={dest.id} />
         </div>
 
+        <DestinationTabNav destId={dest.id} />
         <StatusBar items={items} budget={dest.budget} />
       </div>
 

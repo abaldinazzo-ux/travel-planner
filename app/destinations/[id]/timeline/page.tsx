@@ -1,9 +1,10 @@
 import { redirect, notFound } from 'next/navigation'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import Link from 'next/link'
 import { TravelGantt } from '@/components/destinations/TravelGantt'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
+import { DestinationTabNav } from '@/components/destinations/DestinationTabNav'
+import { ShareButtonClient } from '@/app/destinations/[id]/ShareButtonClient'
 import { formatPeriod } from '@/lib/types'
 
 export default async function TimelinePage(props: { params: Promise<{ id: string }> }) {
@@ -31,12 +32,18 @@ export default async function TimelinePage(props: { params: Promise<{ id: string
   return (
     <div className="min-h-screen bg-[#0D1B2A]">
       {/* Header */}
-      <div className="sticky top-0 z-20 border-b border-white/5 bg-[#0D1B2A]/90 backdrop-blur-md px-4 py-3">
-        <Breadcrumb items={[
-          { label: 'WanderPlan', href: '/' },
-          { label: `${dest.emoji} ${dest.name}`, href: `/destinations/${id}` },
-          { label: 'Timeline' },
-        ]} />
+      <div className="sticky top-0 z-20 border-b border-white/5 bg-[#0D1B2A]/90 backdrop-blur-md">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="flex-1 min-w-0">
+            <Breadcrumb items={[
+              { label: 'WanderPlan', href: '/' },
+              { label: `${dest.emoji} ${dest.name}`, href: `/destinations/${id}` },
+              { label: 'Timeline' },
+            ]} />
+          </div>
+          <ShareButtonClient destinationId={id} />
+        </div>
+        <DestinationTabNav destId={id} />
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -53,12 +60,10 @@ export default async function TimelinePage(props: { params: Promise<{ id: string
           <TravelGantt dest={dest} items={items} />
         </div>
 
-        {/* Back link */}
         <div className="mt-6">
-          <Link href={`/destinations/${id}`}
-            className="text-[#6B8FA8] hover:text-sand text-sm transition-colors">
+          <a href={`/destinations/${id}`} className="text-[#6B8FA8] hover:text-sand text-sm transition-colors">
             ← Torna alla dashboard
-          </Link>
+          </a>
         </div>
       </div>
     </div>

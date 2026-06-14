@@ -1,5 +1,6 @@
 export type Category = 'voli' | 'hotel' | 'ristoranti' | 'itinerari' | 'attivita' | 'note'
 export type ItemStatus = 'idea' | 'found' | 'booked'
+export type TimeOfDay = 'morning' | 'afternoon' | 'evening'
 
 export interface Destination {
   id: string
@@ -27,6 +28,8 @@ export interface DestinationItem {
   notes: string | null
   url: string | null
   status: ItemStatus
+  scheduled_date: string | null   // "2026-08-10"
+  time_of_day: TimeOfDay | null
   created_at: string
 }
 
@@ -79,6 +82,14 @@ export const DESTINATION_COLORS = [
 ]
 
 export const SECTION_ORDER: Category[] = ['voli', 'hotel', 'ristoranti', 'itinerari', 'attivita', 'note']
+
+export const SLOT_META: Record<TimeOfDay, { label: string; emoji: string }> = {
+  morning:   { label: 'Mattina',     emoji: '🌅' },
+  afternoon: { label: 'Pomeriggio',  emoji: '☀️' },
+  evening:   { label: 'Sera',        emoji: '🌙' },
+}
+
+export const TIME_SLOTS: TimeOfDay[] = ['morning', 'afternoon', 'evening']
 
 export const STATUS_CYCLE: Record<ItemStatus, ItemStatus> = {
   idea: 'found', found: 'booked', booked: 'idea',
